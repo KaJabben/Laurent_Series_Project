@@ -330,7 +330,8 @@ noncomputable def Integral_outer_path (z : ℂ) (R₂ : ℝ) (f : ℂ → ℂ) :
 The following lemma decomposes the integral into our two circle integrals.
 -/
 
-lemma Integral_decomposition : Integral_Complete_Path z R₁ R₂ f =
+lemma Integral_decomposition (R₁_pos : 0 ≤ R₁) (hz_lower : R₁ < ‖z‖) (hz_upper : ‖z‖ < R₂) :
+    Integral_Complete_Path z R₁ R₂ f =
     (Integral_inner_path z R₁ f) + (Integral_outer_path z R₂ f) := by
   by_cases hz : z.im = 0
   · unfold Integral_Complete_Path
@@ -362,10 +363,15 @@ lemma Integral_decomposition : Integral_Complete_Path z R₁ R₂ f =
     let IntFun := fun t ↦ (Cauchy_Integrant (IccExtend Path.extend._proof_1
       (int_path_fun z R₁ R₂) t) z f)
       (derivWithin (IccExtend Path.extend._proof_1 (int_path_fun z R₁ R₂)) (Icc 0 1) t)
+
+    --We will need continuity often to prove integrability
+    have h_cont : Continuous IntFun := by sorry
+
+
     have hab : IntervalIntegrable (IntFun) volume 0 (1 / 2) := by
-      sorry
+      exact h_cont.intervalIntegrable (μ := volume) 0 (1 / 2)
     have hbc : IntervalIntegrable (IntFun) volume (1 / 2) 1 := by
-      sorry
+      exact h_cont.intervalIntegrable (μ := volume) (1 /2 ) 1
     have h_decomp := intervalIntegral.integral_add_adjacent_intervals (a := 0)
       (b := 1/2) (c := 1) (μ := volume) (f := IntFun) (hab) (hbc)
     rw [← h_decomp]
@@ -375,9 +381,9 @@ lemma Integral_decomposition : Integral_Complete_Path z R₁ R₂ f =
 
     --decompose first half
     have hab : IntervalIntegrable (IntFun) volume 0 (1 / 4) := by
-      sorry
+      exact h_cont.intervalIntegrable (μ := volume) 0 (1 / 4)
     have hbc : IntervalIntegrable (IntFun) volume (1 / 4) (1 / 2) := by
-      sorry
+      exact h_cont.intervalIntegrable (μ := volume) (1 / 4) (1 / 2)
     have h_decomp := intervalIntegral.integral_add_adjacent_intervals (a := 0)
       (b := 1 / 4) (c := 1 / 2) (μ := volume) (f := IntFun) (hab) (hbc)
     rw [← h_decomp]
@@ -387,9 +393,9 @@ lemma Integral_decomposition : Integral_Complete_Path z R₁ R₂ f =
 
     --decompose second half
     have hab : IntervalIntegrable (IntFun) volume (1 / 2) (3 / 4) := by
-      sorry
+      exact h_cont.intervalIntegrable (μ := volume) (1 / 2) (3 / 4)
     have hbc : IntervalIntegrable (IntFun) volume (3 / 4) 1 := by
-      sorry
+      exact h_cont.intervalIntegrable (μ := volume) (3 / 4) 1
     have h_decomp := intervalIntegral.integral_add_adjacent_intervals (a := 1 / 2)
       (b := 3 / 4) (c := 1)  (μ := volume) (f := IntFun) (hab) (hbc)
     rw [← h_decomp]
@@ -404,7 +410,181 @@ lemma Integral_decomposition : Integral_Complete_Path z R₁ R₂ f =
     --remove the lines that go in opposite directions
     have h_cancel : ((∫ (x : ℝ) in 1 / 4..1 / 2, IntFun x)
         + ∫ (x : ℝ) in 3 / 4..1, IntFun x) = 0 := by
-      sorry
+      rw [add_eq_zero_iff_neg_eq]
+      have hc : (-1 : ℝ) ≠ 0 := by norm_num
+      have h_Int_rw := intervalIntegral.integral_comp_mul_left
+          (c := -1) (IntFun) hc (a := - 1 / 4) (b := - 1 / 2)
+      have h_rw : -1 * (-1 / 4 : ℝ) = 1 / 4 := by norm_num
+      rw [h_rw] at h_Int_rw
+      clear h_rw
+      have h_rw : -1 * (-1 / 2 : ℝ) = 1 / 2 := by norm_num
+      rw [h_rw] at h_Int_rw
+      clear h_rw
+      rw [inv_neg_one] at h_Int_rw
+      rw [neg_one_smul] at h_Int_rw
+      rw [← h_Int_rw]
+      clear h_Int_rw
+      have h_IntFun_rw : ∫ (x : ℝ) in -1 / 4..-1 / 2, IntFun (-1 * x)
+          = ∫ (x : ℝ) in -1 / 4..-1 / 2, IntFun (-1 * (x + (5 / 4)) + (5 / 4)) := by
+        congr
+        simp
+      rw [h_IntFun_rw]
+      clear h_IntFun_rw
+      have hc : (-1 : ℝ) ≠ 0 := by norm_num
+      rw [intervalIntegral.integral_comp_add_right (fun t ↦ IntFun (-1 * t + (5 / 4))) (5 / 4)]
+      have h_rw : (-1 / 4 : ℝ) + 5 / 4 = 1 := by norm_num
+      rw [h_rw]
+      clear h_rw
+      have h_rw : (-1 / 2 : ℝ) + 5 / 4 = 3/ 4 := by norm_num
+      rw [h_rw]
+      clear h_rw
+      rw [intervalIntegral.integral_symm (3 / 4) 1]
+      rw [← intervalIntegral.integral_neg]
+      refine intervalIntegral.integral_congr ?_
+      unfold EqOn
+      intro x hx
+      have h_uIcc : uIcc (3 / 4 : ℝ) 1 = Icc (3 / 4 : ℝ) 1 := by
+        refine uIcc_of_le ?_
+        norm_num
+      rw [h_uIcc] at hx
+      clear h_uIcc
+      rw [show (x ∈ Icc (3 / 4) 1) = (3 / 4 ≤ x ∧ x ≤ 1) from rfl] at hx
+      obtain ⟨hx1, hx2⟩ := hx
+      simp
+      unfold IntFun
+      have h_path_rw : (IccExtend Path.extend._proof_1 (int_path_fun z R₁ R₂) (-x + 5 / 4))
+          = (IccExtend Path.extend._proof_1 (int_path_fun z R₁ R₂) x) := by
+        unfold IccExtend
+        simp
+        unfold int_path_fun
+        simp [hz]
+        have h_cond : (projIcc 0 1 Path.extend._proof_1 (-x + 5 / 4) : ℝ) ≤ 2⁻¹ := by
+          rw [show ↑(projIcc 0 1 Path.extend._proof_1 (-x + 5 / 4)) = max 0 (min 1 (-x + 5 / 4))
+              from rfl]
+          simp
+          right
+          norm_num at hx1
+          grw [← hx1]
+          norm_num
+        simp [h_cond]
+        clear h_cond
+        have h_cond : ¬ (projIcc 0 1 Path.extend._proof_1 x : ℝ) ≤ 2⁻¹ := by
+          rw [not_le]
+          rw [show ↑(projIcc 0 1 Path.extend._proof_1 x) = max 0 (min 1 x) from rfl]
+          simp
+          right
+          constructor
+          · norm_num
+          · linarith
+        simp [h_cond]
+        clear h_cond
+        by_cases hx_boundry : x = (3 / 4) ∨ x = 1
+        · obtain hx1 | hx2 := hx_boundry
+          · rw [hx1]
+            norm_num
+            rw [show ↑(projIcc 0 1 Path.extend._proof_1 (1 / 2))
+                = max 0 (min 1 (1 / 2 : ℝ)) from rfl]
+            have h_rw : max 0 (min 1 (1 / 2 : ℝ)) = 1 / 2 := by norm_num
+            rw [h_rw]
+            clear h_rw
+            rw [show ↑(projIcc 0 1 Path.extend._proof_1 (3 / 4))
+                = max 0 (min 1 (3 / 4 : ℝ)) from rfl]
+            have h_rw : max 0 (min 1 (3 / 4 : ℝ)) = 3 / 4 := by norm_num
+            rw [h_rw]
+            clear h_rw
+            have h_cond : ¬ (1 / 2 : ℝ) ≤ 1 / 4 := by norm_num
+            simp only [h_cond]
+            clear h_cond
+            simp
+            norm_num
+            rw [mul_assoc]
+            norm_num
+            nth_rw 1 [left_eq_mul₀ ?_]
+            · refine Complex.exp_eq_one_iff.mpr ?_
+              use -3
+              ring_nf
+            · rw [div_ne_zero_iff]
+              constructor
+              · norm_cast
+                rw [← ne_eq]
+                linarith
+              · exact Ne.symm (NeZero.ne' 2)
+          · rw [hx2]
+            norm_num
+            rw [show ↑(projIcc 0 1 Path.extend._proof_1 (1 / 4))
+                = max 0 (min 1 (1 / 4 : ℝ)) from rfl]
+            have h_rw : max 0 (min 1 (1 / 4 : ℝ)) = 1 / 4 := by norm_num
+            rw [h_rw]
+            clear h_rw
+            simp
+        · have h_cond : ¬ (projIcc 0 1 Path.extend._proof_1 (-x + 5 / 4) : ℝ) ≤ 4⁻¹ := by
+            simp
+            rw [show ↑(projIcc 0 1 Path.extend._proof_1 (-x + 5 / 4))
+                = max 0 (min 1 (-x + 5 / 4)) from rfl]
+            have hx3 : x < 1 := by
+              push_neg at hx_boundry
+              obtain ⟨hxb1, hxb2⟩ := hx_boundry
+              exact Std.lt_of_le_of_ne hx2 hxb2
+            simp
+            right
+            constructor
+            · norm_num
+            · rw [← lt_sub_iff_add_lt]
+              norm_num
+              exact hx3
+          simp [h_cond]
+          clear h_cond
+          have h_cond : ¬ (projIcc 0 1 Path.extend._proof_1 x : ℝ) ≤ 3 / 4 := by
+            simp
+            rw [show ↑(projIcc 0 1 Path.extend._proof_1 x) = max 0 (min 1 x) from rfl]
+            have hx3 : 3 / 4 < x := by
+              push_neg at hx_boundry
+              obtain ⟨hxb1, hxb2⟩ := hx_boundry
+              exact Std.lt_of_le_of_ne hx1 (id (Ne.symm hxb1))
+            simp
+            right
+            constructor
+            · norm_num
+            · exact hx3
+          simp [h_cond]
+          clear h_cond
+          rw [show ↑(projIcc 0 1 Path.extend._proof_1 (-x + 5 / 4))
+              = max 0 (min 1 (-x + 5 / 4)) from rfl]
+          rw [show ↑(projIcc 0 1 Path.extend._proof_1 x) = max 0 (min 1 x) from rfl]
+          have h_min_rw : (max 0 (min 1 (-x + 5 / 4))) = -x + 5 / 4 := by
+            rw [max_eq_iff]
+            right
+            constructor
+            · simp
+              rw [← sub_le_iff_le_add]
+              linarith
+            · simp
+              linarith
+          rw [h_min_rw]
+          clear h_min_rw
+          have h_min_rw : (max 0 (min 1 x)) = x := by
+            rw [max_eq_iff]
+            right
+            constructor
+            · simp
+              linarith
+            · simp
+              linarith
+          rw [h_min_rw]
+          clear h_min_rw
+          simp
+          ring_nf
+      rw [h_path_rw]
+      have h_path_deriv_rw : (derivWithin (IccExtend Path.extend._proof_1
+          (int_path_fun z R₁ R₂)) (Icc 0 1) (-x + 5 / 4)) = -(derivWithin
+          (IccExtend Path.extend._proof_1 (int_path_fun z R₁ R₂)) (Icc 0 1) x) := by
+        rw [← derivWithin.neg]
+        sorry
+      rw [h_path_deriv_rw]
+      clear h_path_rw
+      clear h_path_deriv_rw
+      simp
+
     rw [h_cancel]
     clear h_cancel
     rw [zero_add (∫ (x : ℝ) in 1 / 2..3 / 4, IntFun x)]
@@ -1165,7 +1345,7 @@ theorem Laurent_theorem (R₁_pos : 0 < R₁) (hz_lower : R₁ < ‖z - z₀‖)
   have hg_analytic : analytic_on_annulus 0 R₁ R₂ g := by
     exact analytic_const_shift h_analytic
   rw [Application_Cauchy (z - z₀) R₁ R₁_pos R₂ g hz_lower hz_upper hg_analytic]
-  rw [Integral_decomposition]
+  rw [Integral_decomposition (by linarith) hz_lower hz_upper]
   unfold Laurent_Series
   rw [add_comm]
   congr
