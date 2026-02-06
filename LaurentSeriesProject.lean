@@ -579,56 +579,56 @@ lemma Integral_decomposition (R₁_pos : 0 ≤ R₁) (hz_lower : R₁ < ‖z‖)
           (int_path_fun z R₁ R₂)) (Icc 0 1) (-x + 5 / 4)) = -(derivWithin
           (IccExtend Path.extend._proof_1 (int_path_fun z R₁ R₂)) (Icc 0 1) x) := by
         rw [derivWithin_of_mem_nhds ?_]
-        rw [← derivWithin.neg]
-        rw [← fderivWithin_derivWithin]
-        have h_diffcond1 : DifferentiableAt ℝ
-            (IccExtend Path.extend._proof_1 (int_path_fun z R₁ R₂)) (-x + 5 / 4) := by
-          sorry
-        have h_diffcond2 : UniqueDiffWithinAt ℝ (Icc 0 1) x := by
-          refine uniqueDiffWithinAt_convex ?_ ?_ ?_
-          · exact convex_Icc 0 1
-          · refine (Convex.nontrivial_iff_nonempty_interior ?_).mp ?_
+        · rw [← derivWithin.neg]
+          rw [← fderivWithin_derivWithin]
+          have h_diffcond1 : DifferentiableAt ℝ
+              (IccExtend Path.extend._proof_1 (int_path_fun z R₁ R₂)) (-x + 5 / 4) := by
+            sorry
+          have h_diffcond2 : UniqueDiffWithinAt ℝ (Icc 0 1) x := by
+            refine uniqueDiffWithinAt_convex ?_ ?_ ?_
             · exact convex_Icc 0 1
-            · rw [show (Icc (0 : ℝ) 1).Nontrivial = ∃ x ∈ Icc (0 : ℝ) 1,
-                  ∃ y ∈ Icc (0 : ℝ) 1, x ≠ y from rfl]
-              use 0
-              constructor
-              · simp
-              · use 1
+            · refine (Convex.nontrivial_iff_nonempty_interior ?_).mp ?_
+              · exact convex_Icc 0 1
+              · rw [show (Icc (0 : ℝ) 1).Nontrivial = ∃ x ∈ Icc (0 : ℝ) 1,
+                    ∃ y ∈ Icc (0 : ℝ) 1, x ≠ y from rfl]
+                use 0
                 constructor
                 · simp
-                · exact zero_ne_one' ℝ
-          · rw [closure_Icc 0 1]
-            simp
-            constructor
-            · linarith
-            · exact hx2
-        have h_comp := fderiv_comp_fderivWithin (𝕜 := ℝ) (s := Icc 0 1)
-            (f := fun t ↦ -t + 5 / 4) (g := (IccExtend Path.extend._proof_1
-            (int_path_fun z R₁ R₂))) x h_diffcond1 (by fun_prop) h_diffcond2
-        simp at h_comp
-        have h_comp' := congrArg (fun L => L 1) h_comp
-        simp [ContinuousLinearMap.comp_apply] at h_comp'
-        have h_deriv_calc : ((fderivWithin ℝ Neg.neg (Icc 0 1) x) 1) = -1 := by
-          rw [fderivWithin_fun_neg ?_]
-          · rw [fderivWithin_id' ?_]
-            · simp
-            · exact UniqueDiffWithinAt.mono_nhds h_diffcond2 fun ⦃U⦄ a ↦ a
-          ·  exact UniqueDiffWithinAt.mono_nhds h_diffcond2 fun ⦃U⦄ a ↦ a
-        rw [← inv_mul_eq_iff_eq_mul₀ ?_] at h_comp'
-        · rw [← h_comp']
-          clear h_comp
-          clear h_comp'
-          rw [h_deriv_calc]
-          clear h_deriv_calc
-          norm_num
-          rw [MeasurableSpace.comp_eq_of_measurable_invariants ?_]
-          · rw [fderivWithin_neg ?_]
-            · simp
-            · exact UniqueDiffWithinAt.mono_nhds h_diffcond2 fun ⦃U⦄ a ↦ a
-          · sorry
-        · rw [h_deriv_calc]
-          norm_num
+                · use 1
+                  constructor
+                  · simp
+                  · exact zero_ne_one' ℝ
+            · rw [closure_Icc 0 1]
+              simp
+              constructor
+              · linarith
+              · exact hx2
+          have h_comp := fderiv_comp_fderivWithin (𝕜 := ℝ) (s := Icc 0 1)
+              (f := fun t ↦ -t + 5 / 4) (g := (IccExtend Path.extend._proof_1
+              (int_path_fun z R₁ R₂))) x h_diffcond1 (by fun_prop) h_diffcond2
+          simp at h_comp
+          have h_comp' := congrArg (fun L => L 1) h_comp
+          simp [ContinuousLinearMap.comp_apply] at h_comp'
+          have h_deriv_calc : ((fderivWithin ℝ Neg.neg (Icc 0 1) x) 1) = -1 := by
+            rw [fderivWithin_fun_neg ?_]
+            · rw [fderivWithin_id' ?_]
+              · simp
+              · exact UniqueDiffWithinAt.mono_nhds h_diffcond2 fun ⦃U⦄ a ↦ a
+            ·  exact UniqueDiffWithinAt.mono_nhds h_diffcond2 fun ⦃U⦄ a ↦ a
+          rw [← inv_mul_eq_iff_eq_mul₀ ?_] at h_comp'
+          · rw [← h_comp']
+            clear h_comp
+            clear h_comp'
+            rw [h_deriv_calc]
+            clear h_deriv_calc
+            norm_num
+            rw [MeasurableSpace.comp_eq_of_measurable_invariants ?_]
+            · rw [fderivWithin_neg ?_]
+              · simp
+              · exact UniqueDiffWithinAt.mono_nhds h_diffcond2 fun ⦃U⦄ a ↦ a
+            · sorry
+          · rw [h_deriv_calc]
+            norm_num
         · simp
           constructor
           · linarith
@@ -700,14 +700,41 @@ lemma Integral_decomposition (R₁_pos : 0 ≤ R₁) (hz_lower : R₁ < ‖z‖)
     rw [one_mul]
 
 
-
     have h_int_eq1 : (∫ (x : ℝ) in 0..2 * π, IntFun (1 / (8 * π) * x + 1 / 2))
         = (∮ (w : ℂ) in C(0, (R₁ + ‖z‖) / 2), f w / (w - z)) := by
 
       have h_circle_inverse : (∮ (w : ℂ) in C(0, (R₁ + ‖z‖) / 2), f w / (w - z))
           = ∫ (θ : ℝ) in 0..2 * π, deriv (circleMap 0 ((R₁ + ‖z‖) / 2))
           (-θ) • (fun w ↦ f w / (w - z)) (circleMap 0 ((R₁ + ‖z‖) / 2) (-θ)) := by
-        sorry
+        unfold circleIntegral
+        rw [intervalIntegral.integral_comp_neg (a := 0) (b := 2 * π)
+            (f := fun θ ↦ deriv (circleMap 0 ((R₁ + ‖z‖) / 2)) θ
+            • (fun w ↦ f w / (w - z)) (circleMap 0 ((R₁ + ‖z‖) / 2) θ))]
+
+        have h_periodic_shift : ∫ (x : ℝ) in -(2 * π)..-0, deriv (circleMap 0
+            ((R₁ + ‖z‖) / 2)) x • (fun w ↦ f w / (w - z)) (circleMap 0 ((R₁ + ‖z‖) / 2) x)
+            = ∫ (x : ℝ) in -(2 * π)..-0, deriv (circleMap 0 ((R₁ + ‖z‖) / 2)) (x + 2 * π)
+            • (fun w ↦ f w / (w - z)) (circleMap 0 ((R₁ + ‖z‖) / 2) (x + 2 * π)) := by
+          congr
+          ext x
+          simp
+          have h_circle_shift : circleMap 0 ((R₁ + ‖z‖) / 2) (x + 2 * π)
+              = circleMap 0 ((R₁ + ‖z‖) / 2) x := by
+            unfold circleMap
+            simp
+            left
+            rw [Complex.exp_eq_exp_iff_exists_int]
+            use 1
+            ring_nf
+          rw [h_circle_shift]
+        rw [h_periodic_shift]
+        clear h_periodic_shift
+
+        rw [intervalIntegral.integral_comp_add_right (d := 2 * π)
+            (f := fun θ ↦ deriv (circleMap 0 ((R₁ + ‖z‖) / 2)) θ
+            • (fun w ↦ f w / (w - z)) (circleMap 0 ((R₁ + ‖z‖) / 2) θ))]
+        simp
+
       rw [h_circle_inverse]
       clear h_circle_inverse
 
@@ -778,24 +805,24 @@ lemma Integral_decomposition (R₁_pos : 0 ≤ R₁) (hz_lower : R₁ < ‖z‖)
                     max 0 (min 1 (π⁻¹ * 8⁻¹ * x + 2⁻¹))
                   from rfl]
               rw [min_eq_right ?_]
-              rw [max_eq_right ?_]
-              rw [← neg_le_iff_add_nonneg]
-              rw [← div_le_iff₀' ?_]
-              · rw [show -2⁻¹ / (π⁻¹ * 8⁻¹) = -2⁻¹ * (π⁻¹ * 8⁻¹)⁻¹ from rfl]
-                rw [mul_inv π⁻¹ 8⁻¹]
-                rw [inv_inv π]
-                linarith
-              · simp
-                exact pi_pos
-              rw [← le_add_neg_iff_add_le]
-              norm_num
-              rw [← le_div_iff₀' ?_]
-              · rw [show 1 / 2 / (π⁻¹ * (1 / 8)) = 1 / 2 * (π⁻¹ * (1 / 8))⁻¹ from rfl]
-                rw [mul_inv π⁻¹ (1 / 8)]
-                rw [inv_inv π]
-                linarith
-              · simp
-                exact pi_pos
+              · rw [max_eq_right ?_]
+                rw [← neg_le_iff_add_nonneg]
+                rw [← div_le_iff₀' ?_]
+                · rw [show -2⁻¹ / (π⁻¹ * 8⁻¹) = -2⁻¹ * (π⁻¹ * 8⁻¹)⁻¹ from rfl]
+                  rw [mul_inv π⁻¹ 8⁻¹]
+                  rw [inv_inv π]
+                  linarith
+                · simp
+                  exact pi_pos
+              · rw [← le_add_neg_iff_add_le]
+                norm_num
+                rw [← le_div_iff₀' ?_]
+                · rw [show 1 / 2 / (π⁻¹ * (1 / 8)) = 1 / 2 * (π⁻¹ * (1 / 8))⁻¹ from rfl]
+                  rw [mul_inv π⁻¹ (1 / 8)]
+                  rw [inv_inv π]
+                  linarith
+                · simp
+                  exact pi_pos
             unfold int_path_fun
             rw [h_rw_proj]
             simp [hz]
@@ -809,14 +836,14 @@ lemma Integral_decomposition (R₁_pos : 0 ≤ R₁) (hz_lower : R₁ < ‖z‖)
             have h_rw : π⁻¹ * 8⁻¹ * x + 2⁻¹ ≤ 3 / 4 := by
               rw [← le_sub_iff_add_le]
               rw [← le_div_iff₀' ?_]
-              rw [show (3 / 4 - 2⁻¹) / (π⁻¹ * 8⁻¹) = (3 / 4 - 2⁻¹) * (π⁻¹ * 8⁻¹)⁻¹ from rfl]
-              rw [mul_inv π⁻¹ 8⁻¹]
-              rw [inv_inv π]
-              rw [inv_inv 8]
-              norm_num
-              linarith
-              simp
-              exact pi_pos
+              · rw [show (3 / 4 - 2⁻¹) / (π⁻¹ * 8⁻¹) = (3 / 4 - 2⁻¹) * (π⁻¹ * 8⁻¹)⁻¹ from rfl]
+                rw [mul_inv π⁻¹ 8⁻¹]
+                rw [inv_inv π]
+                rw [inv_inv 8]
+                norm_num
+                linarith
+              · simp
+                exact pi_pos
             simp [h_rw]
             clear h_rw
             left
@@ -834,12 +861,6 @@ lemma Integral_decomposition (R₁_pos : 0 ≤ R₁) (hz_lower : R₁ < ‖z‖)
         rw [h_fun_agree]
         clear h_fun_agree
         rw [mul_comm]
-
-
-
-
-
-
 
       have h_filter_rw := Filter.eventuallyEq_of_mem (l := ae (volume.restrict (Ioc 0 (2 * π))))
           (s := {x | 0 < x ∧ x < 2* π}) (h_full_measure_Set) (h_EqOn_Set)
