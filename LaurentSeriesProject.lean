@@ -303,7 +303,7 @@ but the fact that integrals over equivalent paths have the same
 value is also not yet in mathlib. So we will just assume the following.
 -/
 
-lemma Application_Cauchy (z : ℂ) (R₁ : ℝ) (R₁_pos : 0 < R₁) (R₂ : ℝ) (g : ℂ → ℂ)
+lemma Application_Cauchy (z : ℂ) (R₁ : ℝ) (R₁_pos : 0 ≤ R₁) (R₂ : ℝ) (g : ℂ → ℂ)
     (hz_lower : R₁ < ‖z‖) (hz_upper : ‖z‖ < R₂) (h_analytic : analytic_on_annulus 0 R₁ R₂ g) :
     g z = Integral_Complete_Path z R₁ R₂ g := by sorry
 
@@ -1467,7 +1467,7 @@ lemma Outer_integral_to_Sum (hR₂ : 0 < R₂) (hz : ‖z‖ < R₂)
 
 /- Here is the analogous version -/
 
-lemma Inner_integral_to_Sum (hR₁ : 0 < R₁) (hz : R₁ < ‖z‖) : (Integral_inner_path z R₁ f) =
+lemma Inner_integral_to_Sum (hR₁ : 0 ≤ R₁) (hz : R₁ < ‖z‖) : (Integral_inner_path z R₁ f) =
     ∑' (i : ℕ), ((2 * ↑Real.pi * Complex.I)⁻¹
     * ∮ w in C(0, (R₁ + ‖z‖) / 2), (w)^i * (f w)) * z^(- ((i : ℤ) + 1)) := by sorry
 
@@ -1476,13 +1476,13 @@ For the laurent coeffictients we need a different radius to integrate over.
 So we need to shift integrals again, which we will dentote with the following lemmas.
 -/
 
-lemma Circle_path_shift (R : ℝ ) (r : ℝ) (i : ℤ) (R₁ : ℝ) (R₁_pos : 0 < R₁) (R₂ : ℝ)
+lemma Circle_path_shift (R : ℝ ) (r : ℝ) (i : ℤ) (R₁ : ℝ) (R₁_pos : 0 ≤ R₁) (R₂ : ℝ)
     (hR_lower : R₁ < R) (hR_upper : R < R₂) (hr_lower : R₁ < r) (hr_upper : r < R₂)
     (h_analytic : analytic_on_annulus z₀ R₁ R₂ f) :
     ∮ w in C(0, R), (w)^i * (f w) = ∮ w in C(0, r), (w)^i * (f w) := by sorry
 
 
-theorem Laurent_theorem (R₁_pos : 0 < R₁) (hz_lower : R₁ < ‖z - z₀‖)
+theorem Laurent_theorem (R₁_pos : 0 ≤ R₁) (hz_lower : R₁ < ‖z - z₀‖)
     (hz_upper : ‖z - z₀‖ < R₂) (h_analytic : analytic_on_annulus z₀ R₁ R₂ f)
     (hr_lower : R₁ < r) (hr_upper : r < R₂) : f z = Laurent_Series z₀ z f r := by
   let g : ℂ → ℂ := by
@@ -1608,46 +1608,44 @@ theorem Laurent_theorem (R₁_pos : 0 < R₁) (hz_lower : R₁ < ‖z - z₀‖)
               grw [norm_sub_norm_le]
               rw [lt_mul_iff_one_lt_right (norm_sub_pos_iff.mpr (id (Ne.symm hxy)))]
               exact one_lt_two
-  · rw [Inner_integral_to_Sum]
-    · refine tsum_congr ?_
-      intro i
-      unfold Laurent_coefficients
+  · rw [Inner_integral_to_Sum R₁_pos hz_lower]
+    refine tsum_congr ?_
+    intro i
+    unfold Laurent_coefficients
+    simp
+    rw [mul_assoc]
+    nth_rewrite 2 [mul_assoc]
+    simp
+    have h_cast_rw : ∮ (w : ℂ) in C(0, (R₁ + ‖z - z₀‖) / 2), w ^ i * g w
+        = ∮ (w : ℂ) in C(0, (R₁ + ‖z - z₀‖) / 2), w ^ (i : ℤ) * g w := by simp
+    rw [h_cast_rw]
+    clear h_cast_rw
+    have hR_lower : R₁ < (R₁ + ‖z - z₀‖) / 2 := by linarith
+    have hR_upper : (R₁ + ‖z - z₀‖) / 2 < R₂ := by linarith
+    rw [Circle_path_shift ((R₁ + ‖z - z₀‖) / 2) r (i : ℤ) R₁ R₁_pos
+        R₂ hR_lower hR_upper hr_lower hr_upper h_analytic (f:= g) (z₀ := z₀)]
+    unfold circleIntegral
+    rw [←intervalIntegral.integral_mul_const ((z - z₀) ^ (-1 + (-i : ℤ))) fun x ↦
+        deriv (circleMap 0 r) x • (fun w ↦ w ^ (i : ℤ) * g w) (circleMap 0 r x)]
+    rw [← intervalIntegral.integral_mul_const ((z - z₀) ^ ((i: ℤ) + 1))⁻¹ fun x ↦
+        deriv (circleMap z₀ r) x • (fun z ↦ (z - z₀) ^ i * f z) (circleMap z₀ r x)]
+    have h_interval : 0 ≤ 2 * π := by
       simp
-      rw [mul_assoc]
-      nth_rewrite 2 [mul_assoc]
+      exact pi_nonneg
+    rw [intervalIntegral.integral_of_le h_interval]
+    rw [intervalIntegral.integral_of_le h_interval]
+    refine setIntegral_congr_fun ?_ ?_
+    · simp
+    · unfold EqOn
+      intro x hx
       simp
-      have h_cast_rw : ∮ (w : ℂ) in C(0, (R₁ + ‖z - z₀‖) / 2), w ^ i * g w
-          = ∮ (w : ℂ) in C(0, (R₁ + ‖z - z₀‖) / 2), w ^ (i : ℤ) * g w := by simp
-      rw [h_cast_rw]
-      clear h_cast_rw
-      have hR_lower : R₁ < (R₁ + ‖z - z₀‖) / 2 := by linarith
-      have hR_upper : (R₁ + ‖z - z₀‖) / 2 < R₂ := by linarith
-      rw [Circle_path_shift ((R₁ + ‖z - z₀‖) / 2) r (i : ℤ) R₁ R₁_pos
-          R₂ hR_lower hR_upper hr_lower hr_upper h_analytic (f:= g) (z₀ := z₀)]
-      unfold circleIntegral
-      rw [←intervalIntegral.integral_mul_const ((z - z₀) ^ (-1 + (-i : ℤ))) fun x ↦
-          deriv (circleMap 0 r) x • (fun w ↦ w ^ (i : ℤ) * g w) (circleMap 0 r x)]
-      rw [← intervalIntegral.integral_mul_const ((z - z₀) ^ ((i: ℤ) + 1))⁻¹ fun x ↦
-          deriv (circleMap z₀ r) x • (fun z ↦ (z - z₀) ^ i * f z) (circleMap z₀ r x)]
-      have h_interval : 0 ≤ 2 * π := by
-        simp
-        exact pi_nonneg
-      rw [intervalIntegral.integral_of_le h_interval]
-      rw [intervalIntegral.integral_of_le h_interval]
-      refine setIntegral_congr_fun ?_ ?_
-      · simp
-      · unfold EqOn
-        intro x hx
-        simp
-        unfold g
-        unfold circleMap
-        rw [← zpow_neg (z - z₀) (↑i + 1)]
-        simp
-        left
-        left
-        left
-        ring_nf
-    · linarith
-    · assumption
+      unfold g
+      unfold circleMap
+      rw [← zpow_neg (z - z₀) (↑i + 1)]
+      simp
+      left
+      left
+      left
+      ring_nf
 
 end Laurent_series
